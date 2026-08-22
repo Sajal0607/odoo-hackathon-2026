@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Payroll{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Payroll Management</h1>
+        <p>Set or update salary structures.</p>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <section class="card">
+        <h3 class="card-title">Update Salary</h3>
+        <form method="POST" action="{{ url_for('payroll_save') }}" oninput="updateNetPreview(this)">
+            <div class="form-group">
+                <label>Employee</label>
+                <select name="user_id" required>
+                    <option value="">Select employee…</option>
+                    {% for e in employees %}
+                    <option value="{{ e.id }}">{{ e.name }} ({{ e.employee_id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Basic Salary (₹)</label>
+                    <input type="number" step="0.01" name="basic_salary" required>
+                </div>
+                <div class="form-group">
+                    <label>Allowances (₹)</label>
+                    <input type="number" step="0.01" name="allowances" value="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Deductions (₹)</label>
+                <input type="number" step="0.01" name="deductions" value="0">
+            </div>
+            <div class="form-group">
+                <label>Net Salary Preview</label>
+                <div class="net-preview" style="font-size:1.3rem; font-weight:700; color:var(--success);">₹0.00</div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:auto;">Save Payroll</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <h3 class="card-title">All Payroll Records</h3>
+        {% if rows %}
+        <div class="table-wrap" style="border:none;">
+            <table>
+                <thead><tr><th>Employee</th><th>Net Salary</th></tr></thead>
+                <tbody>
+                {% for r in rows %}
+                    <tr><td>{{ r.name }}<br><small style="color:var(--text-muted)">{{ r.employee_id }}</small></td><td>₹{{ '%.2f'|format(r.net_salary) }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">No payroll records yet.</div>
+        {% endif %}
+    </section>
+</div>
+
+{% endblock %}
