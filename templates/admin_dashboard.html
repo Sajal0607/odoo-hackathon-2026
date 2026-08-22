@@ -54,9 +54,14 @@
  <tr>
                     <td>{{ e.employee_id }}</td>
                     <td>{{ e.name }}</td>
-                    <td>{{ e.department or '—' }}</td
+                    <td>{{ e.department or '—' }}</td>
                     <td>{{ e.job_title or '—' }}</td>
                     <td><a href="{{ url_for('view_employee', emp_id=e.id) }}" class="btn btn-secondary btn-sm">View</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
     </div>
 
 </div>  
+{ % endblock % }
