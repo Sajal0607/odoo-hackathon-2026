@@ -62,6 +62,8 @@
     </tbody>
     </table>
     </div>
-
+    { % else % }
+    <div class="empty-state"> No employees have signed up yet.</div>
+    {% endif % }
 </div>  
 { % endblock % }
