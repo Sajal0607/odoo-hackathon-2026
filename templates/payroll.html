@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{ %block title % } Payroll {%endblock % }
+{ % block content % }
+<div class="page-header">
+    <h1>Payroll</h1>
+    <p>Read-only salary summary.</p>
+</div>
+</div>
+{% if row %}
+<div class="card" style="max-width:480px;">
+    <div class="detail-row"><span class="label">Basic Salary</span><span class="value">₹{{ '%.2f'|format(row.basic_salary) }}</span></div>
+    <div class="detail-row"><span class="label">Allowances</span><span class="value">₹{{ '%.2f'|format(row.allowances) }}</span></div>
+    <div class="detail-row"><span class="label">Deductions</span><span class="value">-₹{{ '%.2f'|format(row.deductions) }}</span></div>
+    <div class="detail-row"><span class="label"><strong>Net Salary</strong></span><span class="value" style="color:var(--success); font-size:1.1rem;">₹{{ '%.2f'|format(row.net_salary) }}</span></div>
+</div>
+{ % else %}
+    <div class="card"><div class="empty-state">Your payroll hasn't been set up by HR yet.</div></div>
+{ % endif % }
+
+{% endblock % }
