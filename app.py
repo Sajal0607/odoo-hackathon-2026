@@ -279,3 +279,161 @@ def attendance():
         "SELECT * FROM attendance WHERE user_id=? ORDER BY date DESC LIMIT 60",
         (user["id"],),
     ).fetchall()
+    today_att = db.execute(
+        "SELECT * FROM attendance WHERE user_id = ? AND date = ?",
+        (user["id"], date.today().isoformat()),
+    ).fetchone()
+    
+    return render_template("attendance.html", user = user, rows = rows, today_att = today_att)
+
+@app.route("/attendance/check-in", methods=["POST"])
+@login_required
+def check_in():
+    user= current_user
+    db = get_db
+    today = date.today().isoformat()
+    now = datetime.now().structure("%H:%M:%S")
+    
+    existing = db.execute(
+        "SELECT * FROM attendance WHERE user_id = ? AND date=?",(user["id"],today)
+    ).fetchone()
+    
+    if existing:
+        flash("You've already checked in today.", "error")
+    else:
+        db.execute(
+            "INSERT INTO attendance (user_id, date, check_in, status) VALUES (?,?,?,'Present')",
+            (user["id"], today, now),
+        )
+        db.commit()
+        flash(f"Checked in at {now}.", "success")
+    return redirect(url_for("attendance"))
+
+@app.route("/attendance/check_out", methods = ["POST"])
+@login_required
+def check_out():
+    user =current_user()
+    db = get_db()
+    today = date.today().isoformat()
+    now = datetime.now().strftime("%H:%M:%S")
+    
+    existing = db.execute(
+        "SELECT * FROM attendance WHERE user_id=? AND date = ?", (user["id"],today)
+        
+    ).fetchone()
+    if not existing:
+        flash("You need to check in first.", "error")
+    elif existing["check_out"]:
+        flash("You've already checked out today.","error")
+    else:
+        db.execute(
+            "UPDATE attendance SET check_out=? WHERE id=?", (now,existing["id"])
+        )
+        db.commit()
+        flash(f"Checked out at {now}.", "success")
+    return redirect(url_for("attendance"))
+
+#--------------------------------------------
+#LEAVE MANAGEMENT
+#--------------------------------------------
+@app.route("/leave", methods=["GET","POST"])
+@login_required
+def leave():
+    user = current_user()
+    db = get_db()
+    
+    if request.method == "POST":
+        leave_type = request.form["leave_type"]
+        start_date = request.form["start_date"]
+        end_date = request.form["end_date"]
+        remarks = request.form.get("remarks", "").strip()
+        
+        if start_date >end_date:
+            flash("End date cannot be before start date.", "error")
+        else:
+            db.execute(
+                "INSERT INTO leave_requests (user_id,leave_type,start_date,end_date,remarks,status) VALUES (?,?,?,?,?,'Pending')""",
+                )
+            db.commit()
+            flash("Leave request submitted.","success")
+        return redirect(url_for("leave"))
+    if user["role"] == "Admin":
+        rows = db.execute(
+            """SELECT l.*, u.name, u.employee_id FROM leave_requests l ORDER BY (l.status = 'Pending') DESC, l.id DESC"""
+        ).fetchall()
+        return render_template("leave.html",user=user,rows=rows)
+
+@app.route("/leave/<int:leave_id>/decision",methods =["POST"])
+@login_required
+@admin_required
+def leave_decision(leave_id):
+    decision = request.form["decision"] #'Approved' or 'Rejected'
+    comment = request.form.get("admin_comment","").strip()
+    
+    if decision not in ("Approved","Rejected"):
+        flash("Invalid decision","error")
+        return redirect(url_for("leave"))
+    
+    db = get_db()
+    db.execute(
+        "UPDATE leave_requests SET status=?, admin_comment=? WHERE id=?",
+        (decision,comment,leave_id),
+    )
+    db.commit()
+    flash(f"Leave request {decision.lower()}.", "success")
+    return redirect(url_for("leave"))
+
+# ----------------------------------------------------------------------
+# Payroll
+# ----------------------------------------------------------------------
+@app.route("/payroll")
+@login_required
+def payroll():
+    user = current_user()
+    db = get_db()
+
+    if user["role"] == "Admin":
+        rows = db.execute(
+            """SELECT p.*, u.name, u.employee_id FROM payroll p
+               JOIN users u ON u.id = p.user_id
+               ORDER BY u.name"""
+        ).fetchall()
+        employees = db.execute("SELECT id, name, employee_id FROM users WHERE role='Employee'").fetchall()
+        return render_template("payroll_admin.html", user=user, rows=rows, employees=employees)
+
+    row = db.execute("SELECT * FROM payroll WHERE user_id=?", (user["id"],)).fetchone()
+    return render_template("payroll.html", user=user, row=row)
+
+
+@app.route("/payroll/save", methods=["POST"])
+@login_required
+@admin_required
+def payroll_save():
+    emp_id = request.form["user_id"]
+    basic = float(request.form["basic_salary"] or 0)
+    allowances = float(request.form["allowances"] or 0)
+    deductions = float(request.form["deductions"] or 0)
+    net = basic + allowances - deductions
+
+    db = get_db()
+    existing = db.execute("SELECT id FROM payroll WHERE user_id=?", (emp_id,)).fetchone()
+    if existing:
+        db.execute(
+            """UPDATE payroll SET basic_salary=?, allowances=?, deductions=?, net_salary=?
+               WHERE user_id=?""",
+            (basic, allowances, deductions, net, emp_id),
+        )
+    else:
+        db.execute(
+            """INSERT INTO payroll (user_id, basic_salary, allowances, deductions, net_salary)
+               VALUES (?, ?, ?, ?, ?)""",
+            (emp_id, basic, allowances, deductions, net),
+        )
+    db.commit()
+    flash("Payroll updated.", "success")
+    return redirect(url_for("payroll"))
+
+
+if __name__ == "__main__":
+    init_db()
+    app.run(debug=True, port=5000)
