@@ -1,0 +1,35 @@
+# Python
+__pyache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+#Flask
+instance/
+.flaskenv
+*.log
+
+# Database (contains local data/passwords - never commit this)
+database.db
+*.db
+*.sqlite3
+*.sqlite
+
+# Environment  / secrets
+.env
+*.env.local
+
+#OS / editor junk
+.DS_Store
+Thums.db
+.vscode/
+.idea/
+*.swp
+
+# Node (in case any frontend tooling is added later)
+node_modules/
