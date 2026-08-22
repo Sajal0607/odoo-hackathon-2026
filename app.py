@@ -357,7 +357,7 @@ def leave():
             db.commit()
             flash("Leave request submitted.","success")
         return redirect(url_for("leave"))
-    if user["role"] = "Admin":
+    if user["role"] == "Admin":
         rows = db.execute(
             """SELECT l.*, u.name, u.employee_id FROM leave_requests l ORDER BY (l.status = 'Pending') DESC, l.id DESC"""
         ).fetchall()
