@@ -1,6 +1,6 @@
-{ % extends "base.html" %}
-{ % block title % } Attendance{ % endblock % }
-{ % block content %}
+{% extends "base.html" %}
+{% block title % } Attendance{ % endblock % }
+{% block content %}
 
 <div class="page-header">
     <div> 
@@ -8,17 +8,17 @@
         <p> Daily check-in/out and your hsitory.</p>
     </div>
     <div>
-        { % if not today_att %}
+        {% if not today_att %}
         <form action=" {{ url_for('check_in') }}" method="POST" style="display: inline;">
             <button class="btn btn-success">Check In </button>
         </form>
-        { % elif today_att.check_out %}
+        {% elif today_att.check_out %}
         <form action="{{ url_for('check_out') }}" method="POST" style="display: inline;">
             <button class="btn btn-danger" disabled>Check Out</button>
         </form>
-        { % else %}
+        {% else %}
         <span class="badge badge-present">Done for today</span>
-        { % endif %}
+        {% endif %}
     </div>
     </div>
     
@@ -26,18 +26,18 @@
         <table>
             <thead><tr><th>Date</th><th>Check In</th><th><th> Check Out</th><th> Status</th></tr></thead>
         <tbody> 
-            { % for r in rows %}
+            {% for r in rows %}
             <tr>
                 <td>{{ r.date }}</td>
                 <td>{{ r.check_in or '_'}}</td>
                 <td>{{ r.check_out or '_'}}</td>
                 <td><span class="badge badge-{{ r.status.lower ().replace(' ', '-') }}"> {{ r.status}}</span></td>
                 </tr>
-                { % else %}
+                {% else %}
                 <tr><td colspan="4"><div class="empty-state"> No attendance records yet.</div></td>
                 </tr>
-                { % endfor %}
+                {% endfor %}
         </tbody>
         </table>
     </div>
-    { % endblock %}
+    {% endblock %}
