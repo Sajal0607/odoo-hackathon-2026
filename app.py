@@ -45,5 +45,150 @@ def init_db() :
         conn.executescript(f.read())
         
     if first_time:
-        conn.execute("""INSERT INTO users (employee_id, anme, email, password_hash, role, job_title, department, join_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        conn.execute(
+            """INSERT INTO users 
+                (employee_id, name, email, password_hash, role, job_title, department, join_date) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                "ADMIN001",
+                "Demo Admin", 
+                "admin@dayflow.com",
+                generate_password_hash("admin123"),
+                "Admin",
+                "HR Manager",
+                "Human Resources",
+                date.today().isoformat(),
+            ),
+        )
+        conn.commit()
+        print("="* 60)
+        print("Seeded demo Admin account:")
+        print("     Email: admin@dayflow.com")
+        print("Password: admin123")
+        print("="* 60)
+    conn.close()
+#--------------------------------------------
+# Auth helpers / decorators
+#--------------------------------------------
+
+def login_required(view):
+    @wraps(view)
+    def wrapped(*args,**kwargs):
+        if "user_id" not in session:
+            flash("Please sign in to continue.", "error")
+            return redirect(url_for("login"))
+        return view(**kwargs)
+    return wrapped
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped(*args,**kwargs):
+        if session.get("role") != "Admin":
+            flash("You do not have permission to access this page.", "error")
+            return redirect(url_for("dashboard"))
+        return view(*args,**kwargs)
+    return wrapped
+def current_user():
+    """ Returns the current logged-in user"""
+    if "user_id" not in session:
+        return None
+    return get_db().execute(
+        "SELECT * FROM users WHERE id =?", (session["user_id"],)
+    ) .fetchone()
+
+#--------------------------------------------
+# ADMIN ROUTES
+#--------------------------------------------
+@app.route("/")
+def index():
+    if "user_id" in session:
+        return redirect(url_for("dashboard"))
+    return render_template("login.html")
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        employee_id = request.form["employee_id"].strip()
+        name = request.form["name"].strip()
+        email = request.form["email"].strip()
+        password = request.form["password"]
+        role = request.form["role"] # "Employee" or "Admin"
         
+        errors = []
+        if len(password) < 6:
+            errors.append("Password must be at least 6 characters long.")
+            if role not in ("Employee", "Admin"):
+                errors.append("Invalid role selected.")
+            if not employee_id or not name or not email:
+                errors.append("All fields are required.")
+                
+            db = get_db()
+            existing = db.execute(
+                "SELECT * FROM users WHERE email = ? OR employee_id =?",
+                (email, employee_id),
+            ) . fetchone()
+            if existing:
+                errors.append("An account with this email or employee ID already exists.")
+                
+                if errors:
+                    for e in errors:
+                        flash(e, "error")
+                    return render_template("signup.html", form= request.form)
+                
+                db.execute(
+                    """INSERT INTO users (employee_id, name, email, password_hash, role, join_date) VALUES (?, ?, ?, ?, ?, ?)""",
+                    (employee_id, name, email, generate_password_hash(password),role, date.today().isoformat()),
+                )
+                db.commit()
+                flash("Acount created! Please sign in.", "success")
+                return redirect(url_for("login"))
+            return render_template("signup.html", form ={})
+
+@app.route("/login", methods=["GET", "POST"]) 
+def login() : 
+    if request.method == "POST":
+        email = request.form["email"].strip().lower()
+        password = request.form["password"]
+        
+        user = get_db().execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+        
+        if user is None or not check_password_hash(user["password_hash"], password):
+            flash("Invalid email or password.", "error")
+            return render_template("login.html")
+        
+        session.clear()
+        session["user_id"] = user["id"]
+        session["role"] = user["role"]
+        flash(f"Welcome back, {user['name']}!", "success")
+        return redirect(url_for("dashboard"))
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("login")) 
+
+
+#--------------------------------------------
+# DASHBOARD
+#--------------------------------------------
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    user = current_user()
+    db = get_db()
+    
+    if user["role"] == "Admin":
+        employees = db.execute(
+            "SELECT * FROM users WHERE role = 'Employee' ORDER BY name"
+        ) .fetchall()
+        pending_leaves = db.execute(
+            "SELECT COUNT(*) c FROM leave_requests WHERE status = 'Pending'"
+        ).fetchone() ["c"]
+        today_present = db.execute(
+            "SELECT COUNT(*) c FROM attendance WHERE date = ? AND status = 'Present'", (date.today().isoformat(),),).fetchone()["c"]
+        return render_template("admin_dashboard.html", user = user, employees = employees, pending_leaves = pending_leaves, today_present = today_persent,
+        )
