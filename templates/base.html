@@ -8,12 +8,12 @@
 
 </head>
 <body>
-    {% if session.user_id %} 
+    { % if session.user_id % } 
     <nav class="navbar">
         <div class="nav-bread">
             <span class="logo-dot"></span>Dayflow
         </div>
-        <div class="nav-links">
+        </div  class="nav-links">
         <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_dashboard' }}">Dashboard</a>
       <a href="{{ url_for('profile') }}" class="{{ 'active' if request.endpoint == 'profile' }}">Profile</a>
         <a href="{{ url_for('attendance') }}" class="{{ 'active' if request.endpoint == 'attendance' }}">Attendance</a>
@@ -50,6 +50,6 @@
         {% block content %}{% endblock %}
     </main>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    {% block scripts %}{% endblock %}
+    { % block scripts %}{% endblock %}
     </body>
 </html>

@@ -266,11 +266,6 @@ def view_employee(emp_id):
 @login_required
 def attendance():
     user = current_user()
-    if user is None:
-        session.clear()
-        flash("Your session has expired. Please sign in again.", "error")
-        return redirect(url_for("login"))
-
     db = get_db()
 
     if user["role"] == "Admin":
@@ -280,7 +275,7 @@ def attendance():
             ORDER BY a.date DESC LIMIT 200"""
         ) .fetchall()
         return render_template("attendance_admin.html", user = user, rows = rows)
-    rows = db.execute(
+    row = db.execute(
         "SELECT * FROM attendance WHERE user_id=? ORDER BY date DESC LIMIT 60",
         (user["id"],),
     ).fetchall()
@@ -295,11 +290,6 @@ def attendance():
 @login_required
 def check_in():
     user = current_user()
-    if user is None:
-        session.clear()
-        flash("Your session has expired. Please sign in again.", "error")
-        return redirect(url_for("login"))
-
     db = get_db()
     today = date.today().isoformat()
     now = datetime.now().strftime("%H:%M:%S")
@@ -322,12 +312,7 @@ def check_in():
 @app.route("/attendance/check-out", methods=["POST"])
 @login_required
 def check_out():
-    user = current_user()
-    if user is None:
-        session.clear()
-        flash("Your session has expired. Please sign in again.", "error")
-        return redirect(url_for("login"))
-
+    user =current_user()
     db = get_db()
     today = date.today().isoformat()
     now = datetime.now().strftime("%H:%M:%S")
