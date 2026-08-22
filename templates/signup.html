@@ -1,40 +1,22 @@
-{ % extends "base.html" %}
-{% block title } Sign Up { % endblock }
-{ % block content % }
-<div class="auth=wrap">
-</div class = "auth-card">
-<h1>Create your account</h1>
-<p class = "subtitle"> Join Dayflow in a few seconds</p>
-<form method="Post" onsubmit="return validateSignupForm(this)">
-    <div class" form-group">
-        <label for ="employee_id">Employee ID</label>
-        <input type="text" id="employee_id" name="employee_id" required
-        value="{{ form.get('employee_id','') }}"placeholder=e.g. EMP1024>
-    </div>
-    <div class="form-group">
-        <label for="name">Full Name</label>
-        <input type="text" id="name" name="name" required value="{{form.get {'name', ''} }}">
-    </div>
-    <div class="form - group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required vlaue ="{{ form.get {'email',''} }}">
-</div>
-<div class="form-group">
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password" required minlength ="6">
-</div>
-<div class="form-group">
-        <label for="role">Role</label>
-        <select id="role" name="role" required>
-            <option value="Employee" {{ 'selected' if form.get('role') == 'Employee'}}>Employee</option>
-            <option value="Admin" {{ 'selected' if form.get ('role') == 'Admin'}} >HR /Admin </option> 
-               </select>
+{% extends "base.html" %}
+{% block title %}Sign Up{% endblock %}
+{% block content %}
+<div class="auth-wrap"><div class="auth-card">
+    <h1>Create your account</h1>
+    <p class="subtitle">Join Dayflow in a few seconds</p>
+    <form method="POST" onsubmit="return validateSignupForm(this)">
+        <div class="form-group"><label for="employee_id">Employee ID</label><input type="text" id="employee_id" name="employee_id" required value="{{ form.get('employee_id', '') }}" placeholder="e.g. EMP1024"></div>
+        <div class="form-group"><label for="name">Full Name</label><input type="text" id="name" name="name" required value="{{ form.get('name', '') }}"></div>
+        <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" required value="{{ form.get('email', '') }}"></div>
+        <div class="form-group"><label for="password">Password</label><input type="password" id="password" name="password" required minlength="6"></div>
+        <div class="form-group"><label for="role">Role</label>
+            <select id="role" name="role" required>
+                <option value="Employee" {{ 'selected' if form.get('role') == 'Employee' else '' }}>Employee</option>
+                <option value="Admin" {{ 'selected' if form.get('role') == 'Admin' else '' }}>HR / Admin</option>
+            </select>
         </div>
-        <button type="submit" class=" btn btn-primary" >Create Account</button>
-
- </form>
- <p class="auth-switch">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
- </div>
-</div>
-{ %endblock %}
-
+        <button type="submit" class="btn btn-primary">Create Account</button>
+    </form>
+    <p class="auth-switch">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
+</div></div>
+{% endblock %}

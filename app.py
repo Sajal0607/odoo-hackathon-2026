@@ -73,11 +73,11 @@ def init_db() :
 
 def login_required(view):
     @wraps(view)
-    def wrapped(*args,**kwargs):
+    def wrapped(*args, **kwargs):
         if "user_id" not in session:
             flash("Please sign in to continue.", "error")
             return redirect(url_for("login"))
-        return view(**kwargs)
+        return view(*args, **kwargs)
     return wrapped
 
 def admin_required(view):
@@ -108,41 +108,44 @@ def index():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        employee_id = request.form["employee_id"].strip()
-        name = request.form["name"].strip()
-        email = request.form["email"].strip()
-        password = request.form["password"]
-        role = request.form["role"] # "Employee" or "Admin"
-        
+        employee_id = request.form.get("employee_id", "").strip()
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        role = request.form.get("role", "Employee")
+
         errors = []
         if len(password) < 6:
             errors.append("Password must be at least 6 characters long.")
-            if role not in ("Employee", "Admin"):
-                errors.append("Invalid role selected.")
-            if not employee_id or not name or not email:
-                errors.append("All fields are required.")
-                
-            db = get_db()
-            existing = db.execute(
-                "SELECT * FROM users WHERE email = ? OR employee_id =?",
-                (email, employee_id),
-            ) . fetchone()
-            if existing:
-                errors.append("An account with this email or employee ID already exists.")
-                
-                if errors:
-                    for e in errors:
-                        flash(e, "error")
-                    return render_template("signup.html", form= request.form)
-                
-                db.execute(
-                    """INSERT INTO users (employee_id, name, email, password_hash, role, join_date) VALUES (?, ?, ?, ?, ?, ?)""",
-                    (employee_id, name, email, generate_password_hash(password),role, date.today().isoformat()),
-                )
-                db.commit()
-                flash("Acount created! Please sign in.", "success")
-                return redirect(url_for("login"))
-            return render_template("signup.html", form ={})
+        if role not in ("Employee", "Admin"):
+            errors.append("Invalid role selected.")
+        if not employee_id or not name or not email:
+            errors.append("All fields are required.")
+
+        db = get_db()
+        existing = db.execute(
+            "SELECT id FROM users WHERE email = ? OR employee_id = ?",
+            (email, employee_id),
+        ).fetchone()
+        if existing:
+            errors.append("An account with this email or employee ID already exists.")
+
+        if errors:
+            for error in errors:
+                flash(error, "error")
+            return render_template("signup.html", form=request.form)
+
+        db.execute(
+            """INSERT INTO users
+               (employee_id, name, email, password_hash, role, join_date)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (employee_id, name, email, generate_password_hash(password), role, date.today().isoformat()),
+        )
+        db.commit()
+        flash("Account created! Please sign in.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("signup.html", form={})
 
 @app.route("/login", methods=["GET", "POST"]) 
 def login() : 
@@ -161,6 +164,7 @@ def login() :
         session.clear()
         session["user_id"] = user["id"]
         session["role"] = user["role"]
+        session["name"] = user["name"]
         flash(f"Welcome back, {user['name']}!", "success")
         return redirect(url_for("dashboard"))
     return render_template("login.html")
@@ -225,7 +229,7 @@ def profile():
         
         if user["role"] == "Admin" and request.form.get("editing_employee_id"):
             #Admin is editing an employee's profile
-            emp_id = request.form.get["editing_employee_id"]
+            emp_id = request.form.get("editing_employee_id")
             db.execute(
                 """UPDATE users SET name= ?,phone = ?, address = ?, job_title = ?, department = ? WHERE id=?""",
                 (
@@ -235,7 +239,7 @@ def profile():
             )
             db.commit()
             flash("Employee profile updated.", "success")
-            return redirect(url_for("view_emplpoyee", emp_id = emp_id))
+            return redirect(url_for("view_employee", emp_id=emp_id))
         
         # Regular self-edit: limited field only
         db.execute(
@@ -248,7 +252,7 @@ def profile():
 
     return render_template("profile.html", user=user, target = user, editable = True)
 
-@app.route("/employee<int:emp_id>")
+@app.route("/employee/<int:emp_id>")
 @login_required
 @admin_required
 def view_employee(emp_id):
@@ -309,7 +313,7 @@ def check_in():
         flash(f"Checked in at {now}.", "success")
     return redirect(url_for("attendance"))
 
-@app.route("/attendance/check-out", methods=["POST"])
+@app.route("/attendance/check_out", methods = ["POST"])
 @login_required
 def check_out():
     user =current_user()
@@ -352,18 +356,28 @@ def leave():
             flash("End date cannot be before start date.", "error")
         else:
             db.execute(
-                "INSERT INTO leave_requests (user_id,leave_type,start_date,end_date,remarks,status) VALUES (?,?,?,?,?,'Pending')""",
-                )
+                "INSERT INTO leave_requests (user_id, leave_type, start_date, end_date, remarks, status) VALUES (?, ?, ?, ?, ?, 'Pending')",
+                (user["id"], leave_type, start_date, end_date, remarks),
+            )
             db.commit()
             flash("Leave request submitted.","success")
         return redirect(url_for("leave"))
     if user["role"] == "Admin":
         rows = db.execute(
-            """SELECT l.*, u.name, u.employee_id FROM leave_requests l ORDER BY (l.status = 'Pending') DESC, l.id DESC"""
+            """SELECT l.*, u.name, u.employee_id
+               FROM leave_requests l
+               JOIN users u ON u.id = l.user_id
+               ORDER BY (l.status = 'Pending') DESC, l.id DESC"""
         ).fetchall()
-        return render_template("leave.html",user=user,rows=rows)
+        return render_template("leave_admin.html", user=user, rows=rows)
 
-@app.route("/leave/<int:leave_id>/decision",methods =["POST"])
+    rows = db.execute(
+        "SELECT * FROM leave_requests WHERE user_id = ? ORDER BY id DESC",
+        (user["id"],),
+    ).fetchall()
+    return render_template("leave.html", user=user, rows=rows)
+
+@app.route("/leave/<int:leave_id>/decision", methods=["POST"])
 @login_required
 @admin_required
 def leave_decision(leave_id):
