@@ -1,23 +1,23 @@
-{ % extends "base.html" %}
-{% block title } Sign Up { % endblock }
-{ % block content % }
-<div class="auth=wrap">
-</div class = "auth-card">
+{% extends "base.html" %}
+{% block title %} Sign Up {% endblock %}
+{% block content %}
+<div class="auth-wrap">
+<div class = "auth-card">
 <h1>Create your account</h1>
 <p class = "subtitle"> Join Dayflow in a few seconds</p>
 <form method="Post" onsubmit="return validateSignupForm(this)">
-    <div class" form-group">
+    <div class=" form-group">
         <label for ="employee_id">Employee ID</label>
         <input type="text" id="employee_id" name="employee_id" required
-        value="{{ form.get('employee_id','') }}"placeholder=e.g. EMP1024>
+        value="{{ form.get('employee_id','') }}" placeholder="e.g. EMP1024">
     </div>
     <div class="form-group">
         <label for="name">Full Name</label>
-        <input type="text" id="name" name="name" required value="{{form.get {'name', ''} }}">
+        <input type="text" id="name" name="name" required value="{{form.get ('name', '') }}">
     </div>
-    <div class="form - group">
+    <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" required vlaue ="{{ form.get {'email',''} }}">
+        <input type="email" id="email" name="email" required value ="{{ form.get ('email','') }}">
 </div>
 <div class="form-group">
     <label for="password">Password</label>
@@ -36,5 +36,5 @@
  <p class="auth-switch">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
  </div>
 </div>
-{ %endblock %}
+{% endblock %}
 
