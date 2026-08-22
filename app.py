@@ -16,7 +16,7 @@ from functools import wraps
 from flask import (
     Flask, render_template, request, redirect, url_for, session, flash, g 
 )
-from wekzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
@@ -190,5 +190,92 @@ def dashboard():
         ).fetchone() ["c"]
         today_present = db.execute(
             "SELECT COUNT(*) c FROM attendance WHERE date = ? AND status = 'Present'", (date.today().isoformat(),),).fetchone()["c"]
-        return render_template("admin_dashboard.html", user = user, employees = employees, pending_leaves = pending_leaves, today_present = today_persent,
+        return render_template("admin_dashboard.html", user = user, employees = employees, pending_leaves = pending_leaves, today_present = today_present,
         )
+        
+    #--------------------------------------------
+    # EMPLOYEE DASHBOARD
+    #--------------------------------------------
+    today = date.today().isoformat()
+    today_att = db.execute(
+        "SELECT * FROM attendance WHERE user_id = ? AND date = ?",
+        (user["id"], today),
+    ).fetchone()
+    recent_leaves = db.execute(
+        "SELECT * FROM leave_requests WHERE user_id = ? ORDER BY id DESC LIMIT 3",
+        (user["id"],),
+    ).fetchall()
+    return render_template(
+        "employee_dashboard.html",
+        user=user, today_att=today_att, recent_leaves=recent_leaves,
+    )
+    
+#--------------------------------------------
+# PROFILE
+#--------------------------------------------
+@app.route("/profile", methods = ["GET", "POST"])
+@login_required
+def profile():
+    user = current_user()
+    db = get_db()
+    
+    if request.method == "POST":
+        phone = request.form.get("phone", "").strip()
+        address = request.form.get("address", "").strip()
+        
+        if user["role"] == "Admin" and request.form.get("editing_employee_id"):
+            #Admin is editing an employee's profile
+            emp_id = request.form.get["editing_employee_id"]
+            db.execute(
+                """UPDATE users SET name= ?,phone = ?, address = ?, job_title = ?, department = ? WHERE id=?""",
+                (
+                    request.form["name"], phone, address,
+                    request.form["job_title"], request.form["department"], emp_id,
+                ),
+            )
+            db.commit()
+            flash("Employee profile updated.", "success")
+            return redirect(url_for("view_emplpoyee", emp_id = emp_id))
+        
+        # Regular self-edit: limited field only
+        db.execute(
+            "UPDATE users SET phone = ?, address = ? WHERE id = ?",
+            (phone, address, user["id"]),
+        )
+        db.commit()
+        flash("Profile updated.", "success")
+        return redirect(url_for("profile"))
+
+    return render_template("profile.html", user=user, target = user, editable = True)
+
+@app.route("/employee<int:emp_id>")
+@login_required
+@admin_required
+def view_employee(emp_id):
+    target = get_db().execute("SELECT * FROM users WHERE id=?",
+    (emp_id,)).fetchone()
+    if target is None:
+        flash ("Employee not found.", "error")
+        return redirect(url_for("dashboard"))
+    return render_template("profile.html", user=current_user(), target=target, editable=True)
+
+#--------------------------------------------
+# ATTENDANCE
+#--------------------------------------------
+@app.route("/attendance")
+@login_required
+def attendance():
+    user = current_user()
+    db = get_db()
+
+    if user["role"] == "Admin":
+        rows = db.execute(
+            """SELECT a.*, u.name, u.employee_id FROM attendance a 
+            JOIN users u ON u.id = a.user_id
+            ORDER BY a.date DESC LIMIT 200"""
+        ) .fetchall()
+        return render_template("attendance_admin.html", user = user, rows = rows)
+    row = db.execute(
+        "SELECT * FROM attendance WHERE user_id=? ORDER BY date DESC LIMIT 60",
+        (user["id"],),
+    ).fetchall()
