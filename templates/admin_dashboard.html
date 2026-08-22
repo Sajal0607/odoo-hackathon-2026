@@ -1,69 +1,21 @@
-{ % extends "base.html" % }
-{ % block title % } Admin Dashboard { % endblock % }
-{ % block content % }
-
-<div class="page-header">
-    
-<div>
-        <h1>Admin Dashboard</h1>
-        <p>Overview of your organization.</p>
-    </div>
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Admin Dashboard</h1><p>Overview of your organization.</p></div></div>
+<div class="grid grid-3" style="margin-bottom:24px;">
+    <div class="card stat-card"><div class="stat-value">{{ employees|length }}</div><div class="stat-label">Total Employees</div></div>
+    <div class="card stat-card"><div class="stat-value">{{ pending_leaves }}</div><div class="stat-label">Pending Leave Requests</div></div>
+    <div class="card stat-card"><div class="stat-value">{{ today_present }}</div><div class="stat-label">Present Today</div></div>
 </div>
-
-<div class="grid grid-3" style="margin-bottom: 24px;">
-    <div class="card stat-card">
-        <div class="stat-value">{ { employee | length }}</div>
-        <div class="stat-label"> Total Employees</div>
-    </div>
-    <div class="card stat-card">
-        <div class="stat-value">{ { pending | length }}</div>
-        <div class="stat-label"> Pending leave Requests</div>
+<div class="grid grid-4" style="margin-bottom:24px;">
+    <a href="{{ url_for('attendance') }}" class="quick-link"><div class="icon">🕧</div><div><div class="title">Attendance</div><div class="desc">View all records</div></div></a>
+    <a href="{{ url_for('leave') }}" class="quick-link"><div class="icon">📅</div><div><div class="title">Leave Approvals</div><div class="desc">Approve or reject</div></div></a>
+    <a href="{{ url_for('payroll') }}" class="quick-link"><div class="icon">💰</div><div><div class="title">Payroll</div><div class="desc">Manage salaries</div></div></a>
+    <a href="{{ url_for('logout') }}" class="quick-link"><div class="icon">🚪</div><div><div class="title">Logout</div><div class="desc">End your session</div></div></a>
 </div>
-    <div class="card stat-card">
-        <div class="stat-value">{ { today present }}</div>
-        <div class="stat-label"> present today</div>
-       </div>
-    </div>
-<div class="grid grid-4" style="margin-bottom: 24px;">
-    <a href="{ { url for( 'attendance') }}" class ="quick-link">
-        <div class="icon">🕧</div>
-         <div><div class="title">Attendance</div><div class="desc">View all records</div></div>
-    </a>
-    <a href="{{ url_for('leave') }}" class="quick-link">
-        <div class="icon">📅</div>
-        <div><div class="title">Leave Approvals</div><div class="desc">Approve or reject</div></div>
-    </a>
-    <a href="{{ url_for('payroll') }}" class="quick-link">
-        <div class="icon">💰</div>
-        <div><div class="title">Payroll</div><div class="desc">Manage salaries</div></div>
-    </a>
-    <a href="{{ url_for('logout') }}" class="quick-link">
-        <div class="icon">🚪</div>
-        <div><div class="title">Logout</div><div class="desc">End your session</div></div>
-    </a>
+<div class="card"><h3 class="card-title">Employees</h3>
+{% if employees %}<div class="table-wrap" style="border:none;"><table><thead><tr><th>Employee ID</th><th>Name</th><th>Department</th><th>Job Title</th><th></th></tr></thead><tbody>
+{% for e in employees %}<tr><td>{{ e.employee_id }}</td><td>{{ e.name }}</td><td>{{ e.department or '—' }}</td><td>{{ e.job_title or '—' }}</td><td><a href="{{ url_for('view_employee', emp_id=e.id) }}" class="btn btn-secondary btn-sm">View</a></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty-state">No employees have signed up yet.</div>{% endif %}
 </div>
-
-<div class="card">
-    <h3 class="card-title">Employees</h3>
-    {% if employee %}
-    <div class="table-wrap" style="border:none;">
-  <table>
-thead><tr><th>Employee ID</th><th>Name</th><th>Department</th><th>Job Title</th><th></th></tr></thead>
-tbody>
-       {% for e in employees %}
- <tr>
-    <td>{{ e.employee_id }}</td>
-    <td>{{ e.name }}</td>
-    <td>{{ e.department or '—' }}</td>
-    <td>{{ e.job_title or '—' }}</td>
-    <td><a href="{{ url_for('view_employee', emp_id=e.id) }}" class="btn btn-secondary btn-sm">View</a></td>
-    </tr>
-    {% endfor %}
-    </tbody>
-    </table>
-    </div>
-    { % else % }
-    <div class="empty-state"> No employees have signed up yet.</div>
-    {% endif % }
-</div>  
-{ % endblock % }
+{% endblock %}
