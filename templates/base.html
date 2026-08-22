@@ -3,29 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Dayflow{% endblock %} | Dayflow HRMS</title>
+    <title>{% block title %} Dayflow{% endblock %} Dayflow HRMS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
 </head>
 <body>
-{% if session.get('user_id') %}
-<nav class="navbar">
-    <div class="nav-bread"><span class="logo-dot"></span>Dayflow</div>
-    <div class="nav-links">
-        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">Dashboard</a>
-        <a href="{{ url_for('profile') }}" class="{{ 'active' if request.endpoint in ('profile', 'view_employee') else '' }}">Profile</a>
-        <a href="{{ url_for('attendance') }}" class="{{ 'active' if request.endpoint == 'attendance' else '' }}">Attendance</a>
-        <a href="{{ url_for('leave') }}" class="{{ 'active' if request.endpoint in ('leave', 'leave_decision') else '' }}">Leave</a>
-        <a href="{{ url_for('payroll') }}" class="{{ 'active' if request.endpoint in ('payroll', 'payroll_save') else '' }}">Payroll</a>
-    </div>
+    { % if session.user_id % } 
+    <nav class="navbar">
+        <div class="nav-bread">
+            <span class="logo-dot"></span>Dayflow
+        </div>
+        </div  class="nav-links">
+        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_dashboard' }}">Dashboard</a>
+      <a href="{{ url_for('profile') }}" class="{{ 'active' if request.endpoint == 'profile' }}">Profile</a>
+        <a href="{{ url_for('attendance') }}" class="{{ 'active' if request.endpoint == 'attendance' }}">Attendance</a>
+        <a href="{{ url_for('leave') }}" class="{{ 'active' if request.endpoint == 'leave' }}">Leave</a>
+        <a href="{{ url_for('payroll') }}" class="{{ 'active' if request.endpoint == 'payroll' }}">Payroll</a>
+    </div>  
     <div class="nav-user">
-        <span class="user-chip">{{ user.name if user is defined else session.get('name', 'User') }} <small>({{ session.get('role') }})</small></span>
-        <a href="{{ url_for('logout') }}" class="btn btn-logout">Logout</a>
-    </div>
-</nav>
-{% endif %}
+        <span class="user-chip">{{ session.name }} <small>({{ session.role }})</small></span>
+            <a href="{{ url_for('logout') }}" class="btn btn-logout">Logout</a>
+            </div>
+            </nav>
+            {% with messages = get_flashed_messages() %}
+             {% if messages %}
+              <div class="messages-container">
+                {% for message in messages %}
+              <div class="alert-box">{{ message }}</div>
+             {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
 
-<main class="container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
+              
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-wrap">
                 {% for category, message in messages %}
@@ -33,10 +45,11 @@
                 {% endfor %}
             </div>
         {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
-</main>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-{% block scripts %}{% endblock %}
-</body>
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    { % block scripts %}{% endblock %}
+    </body>
 </html>

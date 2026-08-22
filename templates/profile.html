@@ -1,11 +1,64 @@
 {% extends "base.html" %}
 {% block title %}Profile{% endblock %}
 {% block content %}
-{% set is_self = (user.id == target.id) %}
-{% set admin_editing = (user.role == 'Admin' and not is_self and target.role == 'Employee') %}
-<div class="profile-header"><div class="profile-avatar">{{ target.name[0]|upper }}</div><h2>{{ target.name }}</h2><div class="meta">{{ target.employee_id }} · {{ target.job_title or 'No title set' }}</div><span class="badge">{{ target.role }}</span></div>
-<div class="grid grid-2"><section class="card"><h3 class="card-title">Personal Details</h3><div class="detail-row"><span class="label">Email</span><span class="value">{{ target.email }}</span></div><div class="detail-row"><span class="label">Employee ID</span><span class="value">{{ target.employee_id }}</span></div><div class="detail-row"><span class="label">Join Date</span><span class="value">{{ target.join_date or '—' }}</span></div></section>
-<section class="card"><h3 class="card-title">{{ 'Edit Employee' if admin_editing else 'Edit My Details' }}</h3><form method="POST">
-{% if admin_editing %}<input type="hidden" name="editing_employee_id" value="{{ target.id }}"><div class="form-group"><label>Full Name</label><input type="text" name="name" value="{{ target.name }}" required></div><div class="form-row"><div class="form-group"><label>Job Title</label><input type="text" name="job_title" value="{{ target.job_title }}"></div><div class="form-group"><label>Department</label><input type="text" name="department" value="{{ target.department }}"></div></div>{% endif %}
-<div class="form-group"><label>Phone</label><input type="text" name="phone" value="{{ target.phone }}" placeholder="+91 98765 43210"></div><div class="form-group"><label>Address</label><textarea name="address" placeholder="Street, City, State">{{ target.address }}</textarea></div><button type="submit" class="btn btn-primary" style="width:auto;">Save Changes</button></form></section></div>
-{% endblock %}
+{% set is_self = (user.id == current_user.id) %}
+{% set admin_editing = user.role =='Admin' and not is_self %}
+
+<div class="profile-header">
+    <div class="profile-avatar">{{ target.name[0] | upper }}</div>
+        <h2 >{{ target.name }}</h2>
+      <div  class="meta">{{ target.employee_id }}  {{ target.job_title or 'Not title set' }}</div>
+        <span class ="badge badge-{{ target.role.lower() }}">{{ target.role }}</span>
+    </div>
+</div>
+</div>
+<div class="grid grid-2">
+    <section class="card">
+        <h3 class="card-title">Personal Details</h3>
+        <div class="detail-row"><span class="label">Email</span><span class="value">{{ target.email }}</span></div>
+        <div class="detail-row"><span class="label">Employee ID</span><span class="value">{{ target.employee_id }}</span></div>
+        <div class="detail-row"><span class="label">Join Date</span><span class="value">{{ target.join_date or '—' }}</span></div>
+    </section>
+
+    <section class="card">
+        <h3 class="card-title">{{ 'Edit Employee' if admin_editing else 'Edit My Details' }}</h3>
+        <form method="POST">
+            {% if admin_editing %}
+            <input type="hidden" name="editing_employee_id" value="{{ target.id }}">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="name" value="{{ target.name }}" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Job Title</label>
+                    <input type="text" name="job_title" value="{{ target.job_title }}">
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" name="department" value="{{ target.department }}">
+                </div>
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" name="phone" value="{{ target.phone }}" placeholder="+91 98765 43210">
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <textarea name="address" placeholder="Street, City, State">{{ target.address }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:auto;">Save Changes</button>
+        </form>
+        </section>
+        </div>
+        {% if is_self or admin_editing %}
+        <section class="card" style="margin-top: 18px;">
+            <h3 class="card-title">Job Details</h3>
+            <div clas="grid grid-2">
+                <div class="detail-row"><span class="label">Job Title</span><span class="value">{{ target.job_title or '—' }}</span></div>
+        <div class="detail-row"><span class="label">Department</span><span class="value">{{ target.department or '—' }}</span></div>
+            </section> 
+            {% endif %}
+            
+            {% endblock %}

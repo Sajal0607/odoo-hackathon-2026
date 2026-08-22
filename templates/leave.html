@@ -1,14 +1,65 @@
-{% extends "base.html" %}
-{% block title %}Leave{% endblock %}
-{% block content %}
-<div class="page-header"><div><h1>Leave Requests</h1><p>Apply for leave and track your approvals.</p></div></div>
-<div class="grid grid-2"><section class="card"><h3 class="card-title">Apply for Leave</h3><form method="POST">
-<div class="form-group"><label>Leave Type</label><select name="leave_type" required><option value="Paid">Paid</option><option value="Sick">Sick</option><option value="Unpaid">Unpaid</option></select></div>
-<div class="form-group"><label>Start Date</label><input type="date" name="start_date" required></div>
-<div class="form-group"><label>End Date</label><input type="date" name="end_date" required></div>
-<div class="form-group"><label>Remarks</label><textarea name="remarks" placeholder="Optional note for your manager"></textarea></div>
-<button type="submit" class="btn btn-primary" style="width:auto;">Submit Request</button></form></section>
-<section class="card"><h3 class="card-title">My Requests</h3>{% if rows %}<div class="table-wrap" style="border:none;"><table><thead><tr><th>Type</th><th>Dates</th><th>Status</th></tr></thead><tbody>
-{% for l in rows %}<tr><td>{{ l.leave_type }}</td><td>{{ l.start_date }} → {{ l.end_date }}</td><td><span class="badge badge-{{ l.status.lower() }}">{{ l.status }}</span>{% if l.admin_comment %}<div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">{{ l.admin_comment }}</div>{% endif %}</td></tr>{% endfor %}
-</tbody></table></div>{% else %}<div class="empty-state">No recent leave requests.</div>{% endif %}</section></div>
-{% endblock %}
+{ % extends "base.html" %}
+{ % block title % } Leave  { % endblock % }
+{ % block content % }
+
+<div class="page-header">
+    <div>
+        <h1>Leave Requests</h1>
+        <p>Apply for leave and track your approvals.</p>
+    </div> 
+</div>
+
+<div class="grid grid-2">
+    <section class="card">
+        <h3 class="card title">Apply for Leave</h3>
+        <form method="POST" >
+            <div class="form-group">
+                <label>Leave Type</label>
+                <select name="leave_type" required>
+                    <option value="Paid" >Paid</option>
+                    <option value="Sick" >Sick</option>
+                    <option value="Unpaid" >Unpaid</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" name="start_date" required>
+            </div>
+            <div class="form-group">
+>
+                <label>End Date</label>
+                <input type="date" name="end_date" required>
+            </div>
+            <div class="form-group">
+                <label>Remarks</label>
+                <textarea name="remarks" placeholder ="Optional note for your manager" ></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style ="width:auto;">Submit Request</button>
+        </form>
+        </section>
+        <section class="card">
+            <h3 class="card-title">My Requests</h3>
+            { % if rows %}
+            <div class="table-wrap" style="border: none;">
+                <table>
+                    <thead><tr><th>Type</th><th>Dates</th><th>Status</th></tr></thead>
+                    <tbody>
+                        { % for 1 in rows %}
+                        <tr>
+                            <td>{{ 1.leave_type }}</td>
+                            <td>{{ 1.start_date }} {{ 1.end_date }}</td>
+                            <td><span class="badge badge-{{ 1.status.lower()}}">{{ 1.status }}</span>
+                            { % if 1.admin_comment % } <div style="font-size:0.78rem;color : var(--text-muted); margin-top:4px;" >{{ 1.admin_comment }}</div> { % endif % }
+                            </td>
+                    
+                        </tr>
+                        { % endfor %}
+                    </tbody>
+                </table>          
+            </div>
+            { % else %}
+            <div class="empty-state">No recent leave requests.</div>
+            { % endif %}
+            </section>
+        </div>
+        { % endblock %}
