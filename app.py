@@ -209,10 +209,10 @@ def dashboard():
         "SELECT * FROM leave_requests WHERE user_id = ? ORDER BY id DESC LIMIT 3",
         (user["id"],),
     ).fetchall()
-    return render_template("attendance.html", user=user, rows=rows, today_att=today_att, recent_leaves=recent_leaves,
-        "employee_dashboard.html",
-        user=user, today_att=today_att, recent_leaves=recent_leaves,
-    )
+    if user["role"] == "Admin":
+        return render_template("attendance.html",user=user,rows=rows,today_att=today_att,recent_leaves=recent_leaves)
+    else:
+        return render_template("employee_dashboard.html",user=user,today_att=today_att,recent_leaves=recent_leaves)
     
 #--------------------------------------------
 # PROFILE
