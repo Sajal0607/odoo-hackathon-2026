@@ -1,64 +1,53 @@
-{ % extends "base.html" %}
-{ % block content % } Dashboard  { % endblock % }
-{ % block title % }
-
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
 <div class="page-header">
     <div>
-        <h1>Hi, {{ user.name.split (' ') [0] }} 👋</h1>
-        <p>Here's what's happening today.   </p>
+        <h1>Hi, {{ user.name.split(' ')[0] }} 👋</h1>
+        <p>Here's what's happening today.</p>
     </div>
     <div>
         {% if today_att and today_att.check_out %}
-        <span class="badge badge-present">Checked out at {{ today_att.check_out }}</span>
-        { % elif today_att %}
-        <span class="badge badge-present">Checked in at {{ today_att.check_in}} </span>
-        { % else %}
-        <form action "{{ url_for('check_in') }}" method="POST" style="display: inline;">
-            <button class="btn btn-success">Check In </button>
-        </form>
-        { % endif %}
+            <span class="badge badge-present">Checked out at {{ today_att.check_out }}</span>
+        {% elif today_att %}
+            <span class="badge badge-present">Checked in at {{ today_att.check_in }}</span>
+            <form action="{{ url_for('check_out') }}" method="POST" style="display:inline; margin-left:8px;">
+                <button class="btn btn-danger" type="submit">Check Out</button>
+            </form>
+        {% else %}
+            <form action="{{ url_for('check_in') }}" method="POST" style="display:inline;">
+                <button class="btn btn-success" type="submit">Check In</button>
+            </form>
+        {% endif %}
     </div>
 </div>
 
 <div class="grid-4" style="margin-bottom: 24px;">
-    <a href="{{ url_for('profile') }}" class="quick-link">
-        <div class="icon">👤</div>
-        <div><div class="title">Profile</div><div class="desc">View & edit details</div></div>
-    </a>
-    <a href="{{ url_for('attendance') }}" class="quick-link">
-        <div class="icon">🕒</div>
-        <div><div class="title">Attendance</div><div class="desc">Check in / view history</div></div>
-    </a>
-    <a href="{{ url_for('leave') }}" class="quick-link">
-        <div class="icon">📆</div>
-        <div><div class="title">Leave</div><div class="desc">Apply & track status</div></div>
-    </a>
-    <a href="{{ url_for('logout') }}" class="quick-link">
-        <div class="icon">🚪</div>
-        <div><div class="title">Logout</div><div class="desc">End your session</div></div>
-    </a>
-            
-        </div>
-        <div class="card">
-            <h3 class="card-title">Recent Leave Requests    </h3>
-            { % if recent_leaves %}  
-            <div class="table-wrap" style="border: none;">
-                <table>
-                    <thead><tr><th>Type</th><th>Dates</th><th>Status</th></tr></thead>
-                    <tbody>
-                        { % for 1 in recent_leaves %}
-                        <tr>
-                            <td>{{ 1.leave_type }}</td>
-                            <td>{{ 1.start_date }} {{ 1.end_date }}</td>
-                            <td><span class="badge badge-{{ 1.status.lower()}}">{{ 1.status }}</span></td>
-                        </tr>
-                        { % endfor %}
-                    </tbody>
-                </table>          
-</div>
-{ % else %}
-<div class="empty-state">No recent leave requests.</div>
-{ % endif %}
+    <a href="{{ url_for('profile') }}" class="quick-link"><div class="icon">👤</div><div><div class="title">Profile</div><div class="desc">View & edit details</div></div></a>
+    <a href="{{ url_for('attendance') }}" class="quick-link"><div class="icon">🕒</div><div><div class="title">Attendance</div><div class="desc">Check in / view history</div></div></a>
+    <a href="{{ url_for('leave') }}" class="quick-link"><div class="icon">📆</div><div><div class="title">Leave</div><div class="desc">Apply & track status</div></div></a>
+    <a href="{{ url_for('logout') }}" class="quick-link"><div class="icon">🚪</div><div><div class="title">Logout</div><div class="desc">End your session</div></div></a>
 </div>
 
+<div class="card">
+    <h3 class="card-title">Recent Leave Requests</h3>
+    {% if recent_leaves %}
+    <div class="table-wrap" style="border: none;">
+        <table>
+            <thead><tr><th>Type</th><th>Dates</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for leave in recent_leaves %}
+                <tr>
+                    <td>{{ leave.leave_type }}</td>
+                    <td>{{ leave.start_date }} to {{ leave.end_date }}</td>
+                    <td><span class="badge badge-{{ leave.status.lower() }}">{{ leave.status }}</span></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="empty-state">No recent leave requests.</div>
+    {% endif %}
+</div>
 {% endblock %}
